@@ -1,0 +1,40 @@
+var ang int
+var x int
+var y int
+
+var a string
+var b string
+var c string
+
+a = "A inclinação final foi: "
+b = "A coordenada x final foi: "
+c = "A coordenada y final foi: "
+
+x = 6
+y = 3
+
+ativar_propulsor(30)
+submergir
+
+for ang = 90; ang < 100; ang = ang + 1 {
+	Println(ang)
+}
+
+ajustar_inclinacao
+ang = 90
+
+if x == 6 || y == 3 {
+	x = 10
+	y = 20
+}
+
+ajustar_posicao(x, y)
+emergir
+
+// Saída final
+Println(a)
+Println(ang)
+Println(b)
+Println(x)
+Println(c)
+Println(y)
