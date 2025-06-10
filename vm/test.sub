@@ -1,0 +1,10 @@
+inicio() {
+  dizer("Subindo...");
+  subir;
+  dizer("Descendo...");
+  descer;
+  dizer("Inclinando para manobra");
+  inclinar(45);
+  dizer("Parando...");
+  parar;
+}

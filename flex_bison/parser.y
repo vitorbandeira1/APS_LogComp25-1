@@ -1,103 +1,108 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-extern int yylex();
 void yyerror(const char *s);
-
-#undef yywrap
-#define yywrap() 0
+extern int yylex();
 %}
 
-%debug
-
-%token SUBMERGIR EMERGIR AJUSTAR_INCLINACAO ATIVAR_PROPULSOR AJUSTAR_PROFUNDIDADE AJUSTAR_POSICAO
-%token VAR PRINTLN DB_EQUAL OR IF ELSE AND LOOP STRING_LITERAL SEMICOLON LESS_THAN GREATER_THAN EQUAL PLUS MINUS MULTIPLY DIVIDE STRING
-%token LPAREN RPAREN COMMA LBRACE RBRACE NEWLINE INT IDEN TIME
-
 %union {
-        int intValue;
-        char* strValue;
+    int intValue;
+    char* strValue;
 }
 
 %start PROGRAM
 
+%token <strValue> IDEN STRING_LITERAL
+%token <intValue> INT_LITERAL
+
+%token COLON
+
+%token INICIO ROUTINE CALL VAR TYPE_INT TYPE_STRING
+%token IF ELSE WHILE
+%token SUBIR DESCER INCLINAR NAVEGAR_PARA ACELERAR PARAR STATUS DIZER
+
+%token EQ NEQ LEQ GEQ LT GT ASSIGN
+%token PLUS MINUS TIMES DIVIDE AND OR
+
+%token LPAREN RPAREN LBRACE RBRACE COMMA SEMICOLON
+
 %%
 
-PROGRAM : STATEMENT
-        | PROGRAM STATEMENT;
-               
-BLOCK : LBRACE NEWLINE STATEMENTS RBRACE;
+PROGRAM : INICIO LPAREN RPAREN BLOCK ROUTINES ;
 
-STATEMENTS : STATEMENT
-           | STATEMENTS STATEMENT;
+ROUTINES : /* vazio */
+         | ROUTINES ROUTINE_DECL ;
 
-STATEMENT : NEWLINE
-          | ASSIGNMENT NEWLINE
-          | PRINT NEWLINE
-          | VARIABLE NEWLINE
-          | SUBMARINE_CONTROLLER NEWLINE
-          | SUBMARINE_COMMANDS NEWLINE
-          | IF_STATEMENT NEWLINE
-          | LOOP_STATEMENT NEWLINE;
-                    
-SUBMARINE_CONTROLLER : SUBMERGIR | EMERGIR | AJUSTAR_INCLINACAO;
+BLOCK         : LBRACE STATEMENTS RBRACE ;
 
-SUBMARINE_COMMANDS : ATIVAR_PROPULSOR LPAREN INT RPAREN
-                   | AJUSTAR_PROFUNDIDADE LPAREN INT RPAREN
-                   | AJUSTAR_POSICAO COORDINATES;
+STATEMENTS    : STATEMENT SEMICOLON
+              | STATEMENTS STATEMENT SEMICOLON ;
 
-VARIABLE : VAR IDEN
-         | VAR IDEN TYPE;
+STATEMENT     : COMMAND
+              | SAY
+              | VARIABLE_DECL
+              | ASSIGNMENT
+              | IF_STATEMENT
+              | WHILE_STATEMENT
+              | ROUTINE_DECL
+              | ROUTINE_CALL ;
 
-ASSIGNMENT : IDEN EQUAL EXPRESSION;
+COMMAND       : SUBIR
+              | DESCER
+              | INCLINAR LPAREN INT_LITERAL RPAREN
+              | NAVEGAR_PARA LPAREN EXPRESSION COMMA EXPRESSION RPAREN
+              | ACELERAR LPAREN INT_LITERAL RPAREN
+              | PARAR
+              | STATUS ;
 
-PRINT : PRINTLN LPAREN EXPRESSION RPAREN;
+SAY : DIZER LPAREN STRING_LITERAL RPAREN
+    | DIZER LPAREN IDEN RPAREN ;
 
-IF_STATEMENT : IF BOOLEXP BLOCK
-             | IF BOOLEXP BLOCK ELSE BLOCK;
+VARIABLE_DECL : VAR IDEN COLON TYPE ;
 
-LOOP_STATEMENT : LOOP IDEN EQUAL EXPRESSION SEMICOLON BOOLEXP SEMICOLON IDEN EQUAL EXPRESSION BLOCK;
+TYPE          : TYPE_INT | TYPE_STRING ;
 
-BOOLEXP : BOOLTERM
-        | BOOLTERM OR  BOOLEXP;
+ASSIGNMENT    : IDEN ASSIGN EXPRESSION ;
 
-BOOLTERM : RELEXP
-         | RELEXP AND BOOLTERM;
-        
-RELEXP : EXPRESSION
-       | EXPRESSION RELOP EXPRESSION;
+EXPRESSION    : TERM
+              | EXPRESSION PLUS TERM
+              | EXPRESSION MINUS TERM ;
 
-RELOP : GREATER_THAN | LESS_THAN | DB_EQUAL;
+TERM          : FACTOR
+              | TERM TIMES FACTOR
+              | TERM DIVIDE FACTOR ;
 
-EXPRESSION : TERM
-           | TERM PLUS EXPRESSION
-           | TERM MINUS EXPRESSION;
-
-TERM : FACTOR
-     | FACTOR MULTIPLY TERM
-     | FACTOR DIVIDE TERM;
-
-FACTOR : PLUS FACTOR
-       | MINUS FACTOR
-       | INT
+FACTOR : INT_LITERAL
        | STRING_LITERAL
-       | LPAREN EXPRESSION RPAREN
-       | IDEN;
+       | IDEN
+       | LPAREN EXPRESSION RPAREN ;
 
-TYPE : INT | STRING | COORDINATES | TIME;
+IF_STATEMENT  : IF BOOLEXP BLOCK
+              | IF BOOLEXP BLOCK ELSE BLOCK ;
 
-COORDINATES : LPAREN EXPRESSION COMMA EXPRESSION RPAREN;
+WHILE_STATEMENT : WHILE BOOLEXP BLOCK ;
+
+BOOLEXP       : EXPRESSION REL_OP EXPRESSION
+              | BOOLEXP AND BOOLEXP
+              | BOOLEXP OR BOOLEXP ;
+
+REL_OP        : EQ | NEQ | LT | GT | LEQ | GEQ ;
+
+ROUTINE_DECL  : ROUTINE IDEN BLOCK ;
+
+ROUTINE_CALL  : CALL IDEN ;
 
 %%
 
-void yyerror(const char *s){
-        extern int yylineno;
-        extern char *yytext;
-
-        printf("\n Erro (%s): símbolo \"%s\" (linha %d)\n", s, yytext, yylineno);
+void yyerror(const char *s) {
+    extern int yylineno;
+    extern char* yytext;
+    fprintf(stderr, "Erro (%s): símbolo \"%s\" na linha %d\n", s, yytext, yylineno);
 }
 
-int main(){
-        yyparse();
-        return 0;
+int main() {
+    yyparse();
+    return 0;
 }

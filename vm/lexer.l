@@ -1,5 +1,6 @@
 %{
 #include "parser.tab.h"
+#include <string.h>
 %}
 
 %option yylineno
@@ -7,8 +8,7 @@
 
 %%
 "inicio"                  { return INICIO; }
-"routine"                 { return ROUTINE; }
-"chamar"                  { return CALL; }
+"routine"                 { return ROUTINE; }    // rotina declarativa
 "var"                     { return VAR; }
 "int"                     { return TYPE_INT; }
 "string"                  { return TYPE_STRING; }
@@ -52,9 +52,10 @@
     yylval.strValue = strdup(yytext + 1);     // Remove aspas iniciais
     return STRING_LITERAL;
 }
+
 [0-9]+                    { yylval.intValue = atoi(yytext); return INT_LITERAL; }
 [a-zA-Z_][a-zA-Z0-9_]*    { yylval.strValue = strdup(yytext); return IDEN; }
 
-"//".*                    ; // Ignora comentários
-[ \t\r\n]+                ; // Ignora espaços e quebras
+"//".*                    ; // Comentários de linha
+[ \t\r\n]+                ; // Espaços, tabs e quebras de linha ignorados
 %%
